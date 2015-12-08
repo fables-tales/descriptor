@@ -3,7 +3,6 @@
 extern crate lazy_static;
 use std::string::ToString;
 use std::thread::{JoinHandle, spawn, catch_panic};
-use std::mem;
 use std::sync::*;
 use std::any::{Any};
 
