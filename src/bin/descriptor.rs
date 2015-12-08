@@ -1,7 +1,6 @@
 extern crate descriptor;
 
 use descriptor::*;
-
 fn main() {
     describe("descriptor", |eg| {
         eg.it("1", || {
@@ -15,6 +14,12 @@ fn main() {
         });
 
         eg.it("works", || {
+        });
+    });
+
+    describe("descriptor2", |eg| {
+        eg.it("17", || {
+            println!("this one ran too");
         });
     });
 
