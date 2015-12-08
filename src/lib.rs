@@ -28,13 +28,13 @@ impl ExampleGroup {
                 example_definition_block();
             });
 
-            let c = WORLD.clone();
-            let world = c.lock().unwrap();
-            if result.is_err() {
-                world.reporter.example_failed();
-            } else {
-                world.reporter.example_passed();
-            }
+            with_world(|world| {
+                if result.is_err() {
+                    world.reporter.example_failed();
+                } else {
+                    world.reporter.example_passed();
+                }
+            });
 
             return result;
         }));
@@ -81,33 +81,44 @@ struct World {
     example_groups: Vec<ExampleGroupAndBlock>,
 }
 
+fn with_world<F>(blk: F) where F: FnOnce(&mut World) -> () {
+    let c = WORLD.clone();
+    let mut guard = c.lock().unwrap();
+    blk(&mut guard);
+}
+
+impl World {
+}
+
 
 lazy_static! {
     static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World { failed: false, reporter: Reporter, example_groups: Vec::new() }));
 }
 
 pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Sync + Send + 'static {
-    let c = WORLD.clone();
-    let mut world = c.lock().unwrap();
-
-    world.example_groups.push(
-        ExampleGroupAndBlock {
-            group: ExampleGroup {
-                description: description.to_string(),
-                running_examples: Vec::new(),
-            },
-            block: Box::new(example_group_definition_block)
-        }
-    );
+    with_world(|world| {
+        world.example_groups.push(
+            ExampleGroupAndBlock {
+                group: ExampleGroup {
+                    description: description.to_string(),
+                    running_examples: Vec::new(),
+                },
+                block: Box::new(example_group_definition_block)
+            }
+        );
+    });
 }
 
 pub fn get_examples_from_world() -> Vec<ExampleGroupAndBlock> {
     let world_mutex = WORLD.clone();
     let mut world = world_mutex.lock().unwrap();
     let mut result = Vec::new();
-    while !world.example_groups.is_empty() {
-        result.push(world.example_groups.remove(0));
-    }
+
+    with_world(|world| {
+        while !world.example_groups.is_empty() {
+            result.push(world.example_groups.remove(0));
+        }
+    });
 
     return result;
 
@@ -133,12 +144,12 @@ pub fn descriptor_main() {
     for join_handle in join_handles.into_iter() {
         let result = join_handle.join().unwrap();
         if result.is_err() {
-            let world_mutex = WORLD.clone();
-            let mut world = world_mutex.lock().unwrap();
-            world.failed = true;
+            with_world(|world| {
+                world.failed = true;
+            });
         }
     }
-    let world_mutex = WORLD.clone();
-    let mut world = world_mutex.lock().unwrap();
-    println!("{}", world.failed);
+    with_world(|world| {
+        println!("{}", world.failed);
+    });
 }
