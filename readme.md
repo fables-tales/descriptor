@@ -1,1 +1,1 @@
-#STEVE RUN `cargo run --bin descriptor`
+#RUN `cargo run --bin descriptor`
