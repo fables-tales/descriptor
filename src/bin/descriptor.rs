@@ -21,6 +21,21 @@ fn main() {
         eg.it("17", || {
             println!("this one ran too");
         });
+
+        eg.it("does a lot of hard work", || {
+            let mut i = 0;
+            let mut j = 0;
+            let mut k = 0;
+            while i < 100000 {
+                while j < 10000 {
+                    j += 1;
+                    k = 0;
+                }
+                i += 1;
+                j = 0;
+                k = 0;
+            }
+        });
     });
 
     descriptor_main();

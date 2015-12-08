@@ -5,6 +5,8 @@ use std::string::ToString;
 use std::thread::{JoinHandle, spawn, catch_panic};
 use std::sync::*;
 use std::any::{Any};
+use std::io::{self, Write};
+
 
 
 pub struct ExampleGroup {
@@ -68,10 +70,12 @@ pub struct Reporter;
 impl Reporter {
     pub fn example_failed(&self) {
         print!("F");
+        io::stdout().flush();
     }
 
     pub fn example_passed(&self) {
         print!(".");
+        io::stdout().flush();
     }
 }
 
