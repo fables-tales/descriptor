@@ -109,9 +109,7 @@ pub fn describe<F>(description: &str, example_group_definition_block: F) where F
     });
 }
 
-pub fn get_examples_from_world() -> Vec<ExampleGroupAndBlock> {
-    let world_mutex = WORLD.clone();
-    let mut world = world_mutex.lock().unwrap();
+fn get_examples_from_world() -> Vec<ExampleGroupAndBlock> {
     let mut result = Vec::new();
 
     with_world(|world| {
