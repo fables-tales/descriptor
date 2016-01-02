@@ -1,16 +1,17 @@
-#![feature(catch_panic)]
+#![feature(std_panic, recover)]
+#![deny(warnings)]
 #[macro_use]
 extern crate lazy_static;
-use std::string::ToString;
-use std::thread::{JoinHandle, spawn, catch_panic};
-use std::sync::*;
-use std::any::{Any};
+
+use std::any::Any;
 use std::io::{self, Write};
-
-
+use std::panic::{self, RecoverSafe};
+use std::string::ToString;
+use std::sync::*;
+use std::thread::{JoinHandle, spawn};
 
 pub struct ExampleGroup {
-    description: String,
+    _description: String,
     running_examples: Vec<JoinHandle<Result<(), Box<Any + Send>>>>,
 }
 
@@ -20,21 +21,21 @@ pub struct ExampleGroupAndBlock {
 }
 
 pub struct Example {
-    description: String,
+    _description: String,
 }
 
 impl ExampleGroup {
-    pub fn it<F>(&mut self, description: &'static str, example_definition_block: F) where F: Fn() + Sync + Send + 'static {
+    pub fn it<F>(&mut self, _description: &'static str, example_definition_block: F) where F: Fn() + Sync + Send + RecoverSafe + 'static {
         self.running_examples.push(spawn(move || {
-            let result = catch_panic(move || {
+            let result = panic::recover(move || {
                 example_definition_block();
             });
 
             with_world(|world| {
                 if result.is_err() {
-                    world.reporter.example_failed();
+                    world.reporter.example_failed(&mut io::stdout()).unwrap();
                 } else {
-                    world.reporter.example_passed();
+                    world.reporter.example_passed(&mut io::stdout()).unwrap();
                 }
             });
 
@@ -68,14 +69,14 @@ impl ExampleGroup {
 pub struct Reporter;
 
 impl Reporter {
-    pub fn example_failed(&self) {
-        print!("F");
-        io::stdout().flush();
+    pub fn example_failed<W: Write>(&self, out: &mut W) -> io::Result<()> {
+        try!(write!(out, "F"));
+        out.flush()
     }
 
-    pub fn example_passed(&self) {
-        print!(".");
-        io::stdout().flush();
+    pub fn example_passed<W: Write>(&self, out: &mut W) -> io::Result<()> {
+        try!(write!(out, "."));
+        out.flush()
     }
 }
 
@@ -104,7 +105,7 @@ pub fn describe<F>(description: &str, example_group_definition_block: F) where F
         world.example_groups.push(
             ExampleGroupAndBlock {
                 group: ExampleGroup {
-                    description: description.to_string(),
+                    _description: description.to_string(),
                     running_examples: Vec::new(),
                 },
                 block: Box::new(example_group_definition_block)
