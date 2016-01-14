@@ -5,3 +5,6 @@ authors = ["Sam Phippen <samphippen@googlemail.com>"]
 
 [dependencies]
 lazy_static = "0.1.15"
+
+[dev-dependencies]
+expector = { path = "../expector" }

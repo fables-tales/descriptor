@@ -2,8 +2,13 @@
 name = "descriptor"
 version = "0.1.0-pre"
 dependencies = [
+ "expector 0.1.0",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "expector"
+version = "0.1.0"
 
 [[package]]
 name = "lazy_static"
