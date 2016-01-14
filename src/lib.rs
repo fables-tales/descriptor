@@ -85,10 +85,10 @@ struct World {
     example_groups: Vec<ExampleGroupAndBlock>,
 }
 
-fn with_world<F>(blk: F) where F: FnOnce(&mut World) -> () {
+fn with_world<F, T>(blk: F) -> T where F: FnOnce(&mut World) -> T {
     let c = WORLD.clone();
     let mut guard = c.lock().unwrap();
-    blk(&mut guard);
+    blk(&mut guard)
 }
 
 impl World {
@@ -120,41 +120,27 @@ fn get_examples_from_world() -> Vec<ExampleGroupAndBlock> {
     let mut result = Vec::new();
 
     with_world(|world| {
-        while !world.example_groups.is_empty() {
-            result.push(world.example_groups.remove(0));
-        }
-    });
-
-    return result;
-
+        ::std::mem::replace(&mut world.example_groups, result)
+    })
 }
 
 pub fn descriptor_main() {
     let mut example_groups = get_examples_from_world();
-    let mut join_handles = Vec::new();
-
-    while !example_groups.is_empty() {
-        let example_group_and_block = example_groups.remove(0);
-        let example_group = example_group_and_block.group;
-        let block = example_group_and_block.block;
-        join_handles.push(spawn(|| -> Result<(), ()> {
+    let join_handles: Vec<JoinHandle<Result<(), ()>>> = example_groups.into_iter().map({ |ExampleGroupAndBlock { group: example_group, block: block }|
+        spawn(|| -> Result<(), ()> {
             if example_group.run(block) {
-                return Ok(());
+                Ok(())
             } else {
-                return Err(());
+                Err(())
             }
-        }));
-    }
+        })
+    }).collect();
 
-    for join_handle in join_handles.into_iter() {
-        let result = join_handle.join().unwrap();
-        if result.is_err() {
-            with_world(|world| {
-                world.failed = true;
-            });
-        }
-    }
+    let results = join_handles.into_iter().map(|jh| { jh.join().unwrap() });
+    let failed = results.into_iter().any(|r| { r.is_err() });
+
     with_world(|world| {
+        world.failed = failed;
         println!("{}", world.failed);
     });
 }
