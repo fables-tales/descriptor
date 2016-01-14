@@ -24,7 +24,7 @@ pub struct Example {
 }
 
 impl ExampleGroup {
-    pub fn it<F>(&mut self, description: &'static str, example_definition_block: F) where F: Fn() + Sync + Send + 'static {
+    pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Sync + Send + 'static {
         self.running_examples.push(spawn(move || {
             let result = catch_panic(move || {
                 example_definition_block();
