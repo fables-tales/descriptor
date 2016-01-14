@@ -92,6 +92,17 @@ fn with_world<F>(blk: F) where F: FnOnce(&mut World) -> () {
 }
 
 impl World {
+    fn describe<F>(&mut self, description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Sync + Send + 'static {
+        self.example_groups.push(
+            ExampleGroupAndBlock {
+                group: ExampleGroup {
+                    description: description.to_string(),
+                    running_examples: Vec::new(),
+                },
+                block: Box::new(example_group_definition_block)
+            }
+        );
+    }
 }
 
 
@@ -101,15 +112,7 @@ lazy_static! {
 
 pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Sync + Send + 'static {
     with_world(|world| {
-        world.example_groups.push(
-            ExampleGroupAndBlock {
-                group: ExampleGroup {
-                    description: description.to_string(),
-                    running_examples: Vec::new(),
-                },
-                block: Box::new(example_group_definition_block)
-            }
-        );
+        world.describe(description, example_group_definition_block);
     });
 }
 
