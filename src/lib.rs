@@ -84,14 +84,14 @@ impl ExampleGroup {
     fn run(mut self, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
         block(&mut self);
         let state = self.state;
-        let running_examples = self.examples.into_iter().map(|example| {
+        let running_examples: Vec<_> = self.examples.into_iter().map(|example| {
             let state = state.clone();
             spawn(move || example(state))
-        });
+        }).collect();
 
         let mut failed = false;
 
-        let results: Vec<_> = running_examples.map(|jh| {
+        let results: Vec<_> = running_examples.into_iter().map(|jh| {
             jh.join()
         }).collect();
 
