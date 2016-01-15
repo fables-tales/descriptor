@@ -12,6 +12,7 @@ use std::io::{self, Write};
 pub struct ExampleGroup {
     description: String,
     running_examples: Vec<JoinHandle<Result<(), Box<Any + Send>>>>,
+    state: Arc<Mutex<WorldState>>,
 }
 
 pub struct ExampleGroupAndBlock {
@@ -23,20 +24,31 @@ pub struct Example {
     description: String,
 }
 
+struct World {
+    state: Arc<Mutex<WorldState>>,
+    example_groups: Vec<ExampleGroupAndBlock>,
+}
+
+struct WorldState {
+    reporter: Reporter,
+    failed: bool,
+}
+
+
 impl ExampleGroup {
     pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Sync + Send + 'static {
+        let state: Arc<Mutex<WorldState>> = self.state.clone();
         self.running_examples.push(spawn(move || {
             let result = catch_panic(move || {
                 example_definition_block();
             });
 
-            with_world(|world| {
-                if result.is_err() {
-                    world.reporter.example_failed();
-                } else {
-                    world.reporter.example_passed();
-                }
-            });
+
+            if result.is_err() {
+                state.lock().unwrap().reporter.example_failed();
+            } else {
+                state.lock().unwrap().reporter.example_passed();
+            }
 
             return result;
         }));
@@ -79,12 +91,6 @@ impl Reporter {
     }
 }
 
-struct World {
-    reporter: Reporter,
-    failed: bool,
-    example_groups: Vec<ExampleGroupAndBlock>,
-}
-
 fn with_world<F, T>(blk: F) -> T where F: FnOnce(&mut World) -> T {
     let c = WORLD.clone();
     let mut guard = c.lock().unwrap();
@@ -98,16 +104,27 @@ impl World {
                 group: ExampleGroup {
                     description: description.to_string(),
                     running_examples: Vec::new(),
+                    state: self.state.clone(),
                 },
                 block: Box::new(example_group_definition_block)
             }
         );
     }
+
+    fn new() -> World {
+        World {
+            state: Arc::new(Mutex::new(WorldState {
+                failed: false,
+                reporter: Reporter,
+            })),
+            example_groups: Vec::new(),
+        }
+    }
 }
 
 
 lazy_static! {
-    static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World { failed: false, reporter: Reporter, example_groups: Vec::new() }));
+    static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World::new()));
 }
 
 pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Sync + Send + 'static {
@@ -140,7 +157,8 @@ pub fn descriptor_main() {
     let failed = results.into_iter().any(|r| { r.is_err() });
 
     with_world(|world| {
-        world.failed = failed;
-        println!("{}", world.failed);
+        let state = world.state.clone();
+        state.lock().unwrap().failed = failed;
+        println!("{}", state.lock().unwrap().failed);
     });
 }
