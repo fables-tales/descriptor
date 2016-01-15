@@ -1,6 +1,7 @@
-#![feature(catch_panic)]
+#![feature(catch_panic, fnbox)]
 #[macro_use]
 extern crate lazy_static;
+use std::boxed::FnBox;
 use std::string::ToString;
 use std::thread::{JoinHandle, spawn, catch_panic};
 use std::sync::*;
@@ -10,6 +11,7 @@ use std::fmt;
 
 pub struct ExampleGroup {
     description: String,
+    examples: Vec<Box<FnBox(Arc<Mutex<WorldState>>) -> Result<(), Box<Any + Send>> + Send + 'static>>,
     running_examples: Vec<JoinHandle<Result<(), Box<Any + Send>>>>,
     state: Arc<Mutex<WorldState>>,
 }
@@ -67,11 +69,8 @@ impl Reporter {
 
 impl ExampleGroup {
     pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Send + 'static {
-        let state: Arc<Mutex<WorldState>> = self.state.clone();
-        self.running_examples.push(spawn(move || {
-            let result = catch_panic(move || {
-                example_definition_block();
-            });
+        self.examples.push(Box::new(move |state: Arc<Mutex<WorldState>>| {
+            let result = catch_panic(example_definition_block);
 
             if result.is_err() {
                 state.lock().unwrap().reporter.example_failed();
@@ -83,26 +82,27 @@ impl ExampleGroup {
         }));
     }
 
-    fn block_on_all_examples(self) -> Result<(), ()> {
+    fn run(mut self, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
+        block(&mut self);
+        let state = self.state;
+        let running_examples = self.examples.into_iter().map(|example| {
+            let state = state.clone();
+            spawn(move || example(state))
+        });
+
         let mut failed = false;
-        for jh in self.running_examples.into_iter() {
-            if jh.join().unwrap().is_err() {
+
+        let results: Vec<_> = running_examples.map(|jh| {
+            jh.join()
+        }).collect();
+
+        for jh in results.into_iter() {
+            if jh.unwrap().is_err() {
                 failed = true;
             }
         }
 
-        if failed {
-            return Err(());
-        } else {
-            return Ok(());
-        }
-    }
-
-    fn run(mut self, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
-        block(&mut self);
-
-        let result = self.block_on_all_examples();
-        return result.is_ok();
+        return failed;
     }
 }
 
@@ -129,6 +129,7 @@ impl World {
                     description: description.to_string(),
                     running_examples: Vec::new(),
                     state: self.state.clone(),
+                    examples: Vec::new(),
                 },
                 block: Box::new(example_group_definition_block)
             }
