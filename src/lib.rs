@@ -12,7 +12,6 @@ use std::fmt;
 pub struct ExampleGroup {
     description: String,
     examples: Vec<Box<FnBox(Arc<Mutex<WorldState>>) -> Result<(), Box<Any + Send>> + Send + 'static>>,
-    running_examples: Vec<JoinHandle<Result<(), Box<Any + Send>>>>,
     state: Arc<Mutex<WorldState>>,
 }
 
@@ -127,7 +126,6 @@ impl World {
             ExampleGroupAndBlock {
                 group: ExampleGroup {
                     description: description.to_string(),
-                    running_examples: Vec::new(),
                     state: self.state.clone(),
                     examples: Vec::new(),
                 },
