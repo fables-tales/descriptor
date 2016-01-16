@@ -26,7 +26,7 @@ fn main() {
             let mut i = 0;
             let mut j = 0;
             let mut k = 0;
-            while i < 100000 {
+            while i < 1000 {
                 while j < 10000 {
                     j += 1;
                     k = 0;

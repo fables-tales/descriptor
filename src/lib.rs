@@ -1,15 +1,14 @@
 #![feature(catch_panic, fnbox)]
 #[macro_use]
 extern crate lazy_static;
-use std::boxed::FnBox;
 use std::string::ToString;
-use std::thread::{JoinHandle, spawn, catch_panic};
+use std::thread::{JoinHandle, spawn};
 use std::sync::{Arc, Mutex};
 use std::fmt;
 
 pub mod reporter;
 mod world_state;
-mod example_group;
+pub mod example_group;
 
 pub struct ExampleGroupAndBlock {
     group: example_group::ExampleGroup,
@@ -20,11 +19,6 @@ impl fmt::Debug for ExampleGroupAndBlock {
     fn fmt(&self, formatter: &mut fmt::Formatter) ->  fmt::Result {
         write!(formatter, "<Example group and block with example_group {:#?}>", self.group)
     }
-}
-
-#[derive(Debug)]
-pub struct Example {
-    description: String,
 }
 
 #[derive(Debug)]
@@ -101,7 +95,6 @@ impl World {
         }
     }
 }
-
 
 lazy_static! {
     static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World::new()));
