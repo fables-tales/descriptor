@@ -6,8 +6,10 @@ use std::string::ToString;
 use std::thread::{JoinHandle, spawn, catch_panic};
 use std::sync::*;
 use std::any::{Any};
-use std::io::{self, Write};
 use std::fmt;
+use std::io::Write;
+
+mod reporter;
 
 pub struct ExampleGroup {
     description: String,
@@ -44,26 +46,9 @@ struct World {
 
 #[derive(Debug)]
 struct WorldState {
-    reporter: Reporter,
+    reporter: reporter::Reporter,
     failed: bool,
 }
-
-#[derive(Debug)]
-pub struct Reporter;
-
-impl Reporter {
-    pub fn example_failed(&self) {
-        print!("F");
-        io::stdout().flush();
-    }
-
-    pub fn example_passed(&self) {
-        print!(".");
-        io::stdout().flush();
-    }
-}
-
-
 
 impl ExampleGroup {
     pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Send + 'static {
@@ -143,7 +128,7 @@ impl World {
 
         WorldState {
             failed: state.failed,
-            reporter: Reporter
+            reporter: reporter::Reporter
 
         }
     }
@@ -165,7 +150,7 @@ impl World {
         World {
             state: Arc::new(Mutex::new(WorldState {
                 failed: false,
-                reporter: Reporter,
+                reporter: reporter::Reporter,
             })),
             example_groups: Vec::new(),
         }
