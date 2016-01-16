@@ -12,8 +12,8 @@ pub type ExampleResult = Result<(), Box<Any + Send>>;
 pub type Examples = Vec<Box<FnBox(Arc<Mutex<world_state::WorldState>>) -> ExampleResult + Send + 'static>>;
 
 pub struct ExampleGroup {
-    pub description: String,
-    pub examples: Examples,
+    description: String,
+    examples: Examples,
 }
 
 impl fmt::Debug for ExampleGroup {
@@ -23,6 +23,12 @@ impl fmt::Debug for ExampleGroup {
 }
 
 impl ExampleGroup {
+    pub fn new(description: &str) -> ExampleGroup {
+        ExampleGroup {
+            description: description.to_string(),
+            examples: Vec::new(),
+        }
+    }
     pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Send + 'static {
         self.examples.push(Box::new(move |state: Arc<Mutex<world_state::WorldState>>| {
             let result = catch_panic(example_definition_block);

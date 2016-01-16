@@ -34,11 +34,8 @@ impl World {
     fn describe<F>(&mut self, description: &str, example_group_definition_block: F) where F: Fn(&mut example_group::ExampleGroup) + Send + 'static {
         self.example_groups.push(
             ExampleGroupAndBlock {
-                group: example_group::ExampleGroup {
-                    description: description.to_string(),
-                    examples: Vec::new(),
-                },
-                block: Box::new(example_group_definition_block)
+                group: example_group::ExampleGroup::new(description),
+                block: Box::new(example_group_definition_block),
             }
         );
     }
@@ -75,14 +72,18 @@ lazy_static! {
 fn with_world<F, T>(blk: F) -> T where F: FnOnce(&mut World) -> T {
     let c = WORLD.clone();
     let mut guard = c.lock().unwrap();
+
     blk(&mut guard)
 }
 
 fn consuming_world<F, T>(blk: F) -> T where F: FnOnce(World) -> T {
     let guard = WORLD.clone();
     let mut world_current = guard.lock().unwrap();
+
     let mut world = World::new();
+
     std::mem::swap(&mut world, &mut world_current);
+
     blk(world)
 }
 
