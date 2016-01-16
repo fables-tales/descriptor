@@ -1,14 +1,17 @@
 #![feature(catch_panic, fnbox)]
 #[macro_use]
 extern crate lazy_static;
+mod util;
+pub mod reporter;
+mod world_state;
+pub mod example_group;
+
 use std::string::ToString;
 use std::thread::{JoinHandle, spawn};
 use std::sync::{Arc, Mutex};
 use std::fmt;
 
-pub mod reporter;
-mod world_state;
-pub mod example_group;
+use util::await_handles;
 
 pub struct ExampleGroupAndBlock {
     group: example_group::ExampleGroup,
@@ -57,7 +60,7 @@ impl World {
 
     fn run(self) -> world_state::WorldState {
         let join_handles: Vec<_> = World::create_example_group_join_handles(self.state.clone(), self.example_groups);
-        let results = join_handles.into_iter().map(|jh| jh.join().unwrap());
+        let results = await_handles(join_handles);
         let failed = results.into_iter().any(|r| { r.is_err() });
 
         let state_guard = self.state.clone();

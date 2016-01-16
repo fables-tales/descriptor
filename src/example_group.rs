@@ -6,6 +6,7 @@ use std::fmt;
 use std::thread::{JoinHandle, spawn, catch_panic};
 
 use world_state;
+use util::await_handles;
 pub use reporter;
 
 pub type ExampleResult = Result<(), Box<Any + Send>>;
@@ -43,12 +44,10 @@ impl ExampleGroup {
 
         let mut failed = false;
 
-        let results: Vec<_> = running_examples.into_iter().map(|jh| {
-            jh.join()
-        }).collect();
+        let results = await_handles(running_examples);
 
-        for jh in results.into_iter() {
-            if jh.unwrap().is_err() {
+        for result in results.into_iter() {
+            if result.is_err() {
                 failed = true;
             }
         }
