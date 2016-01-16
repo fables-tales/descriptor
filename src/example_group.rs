@@ -28,10 +28,14 @@ impl ExampleGroup {
         self.examples.push(Box::new(move |state: Arc<Mutex<world_state::WorldState>>| {
             let result = catch_panic(example_definition_block);
 
-            if result.is_err() {
-                state.lock().unwrap().reporter.example_failed();
-            } else {
-                state.lock().unwrap().reporter.example_passed();
+            //lololololololol scoping
+            {
+                let ref reporter = state.lock().unwrap().reporter;
+                if result.is_err() {
+                    reporter.example_failed();
+                } else {
+                    reporter.example_passed();
+                }
             }
 
             return result;
@@ -40,17 +44,10 @@ impl ExampleGroup {
 
     pub fn run(mut self, state: Arc<Mutex<world_state::WorldState>>, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
         block(&mut self);
+
         let running_examples = Self::build_running_examples(state, self.examples);
-
-        let mut failed = false;
-
         let results = await_handles(running_examples);
-
-        for result in results.into_iter() {
-            if result.is_err() {
-                failed = true;
-            }
-        }
+        let failed = results.into_iter().any( |r| r.is_err() );
 
         return failed;
     }
