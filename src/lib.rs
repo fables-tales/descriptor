@@ -20,21 +20,6 @@ struct World {
     example_groups: Vec<ExampleGroupAndBlock>,
 }
 
-fn with_world<F, T>(blk: F) -> T where F: FnOnce(&mut World) -> T {
-    let c = WORLD.clone();
-    let mut guard = c.lock().unwrap();
-    blk(&mut guard)
-}
-
-fn consuming_world<F, T>(blk: F) -> T where F: FnOnce(World) -> T {
-    let guard = WORLD.clone();
-    let mut world_current = guard.lock().unwrap();
-    let mut world = World::new();
-    std::mem::swap(&mut world, &mut world_current);
-    blk(world)
-
-}
-
 impl World {
     fn new() -> World {
         World {
@@ -85,6 +70,20 @@ impl World {
 
 lazy_static! {
     static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World::new()));
+}
+
+fn with_world<F, T>(blk: F) -> T where F: FnOnce(&mut World) -> T {
+    let c = WORLD.clone();
+    let mut guard = c.lock().unwrap();
+    blk(&mut guard)
+}
+
+fn consuming_world<F, T>(blk: F) -> T where F: FnOnce(World) -> T {
+    let guard = WORLD.clone();
+    let mut world_current = guard.lock().unwrap();
+    let mut world = World::new();
+    std::mem::swap(&mut world, &mut world_current);
+    blk(world)
 }
 
 pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut example_group::ExampleGroup) + Send + 'static {
