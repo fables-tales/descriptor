@@ -1,4 +1,3 @@
-#![feature(catch_panic, fnbox)]
 use std::boxed::FnBox;
 use std::any::{Any};
 use std::sync::{Arc, Mutex};
@@ -6,7 +5,7 @@ use std::fmt;
 use std::thread::{JoinHandle, spawn, catch_panic};
 
 use world_state;
-use util::await_handles;
+use util::{await_handles, any_is_err};
 pub use reporter;
 
 pub type ExampleResult = Result<(), Box<Any + Send>>;
@@ -47,7 +46,7 @@ impl ExampleGroup {
 
         let running_examples = Self::build_running_examples(state, self.examples);
         let results = await_handles(running_examples);
-        let failed = results.into_iter().any( |r| r.is_err() );
+        let failed = any_is_err(results);
 
         return failed;
     }
