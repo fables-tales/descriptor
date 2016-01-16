@@ -12,7 +12,6 @@ use std::fmt;
 pub struct ExampleGroup {
     description: String,
     examples: Vec<Box<FnBox(Arc<Mutex<WorldState>>) -> Result<(), Box<Any + Send>> + Send + 'static>>,
-    state: Arc<Mutex<WorldState>>,
 }
 
 impl fmt::Debug for ExampleGroup {
@@ -81,9 +80,8 @@ impl ExampleGroup {
         }));
     }
 
-    fn run(mut self, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
+    fn run(mut self, state: Arc<Mutex<WorldState>>, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
         block(&mut self);
-        let state = self.state;
         let running_examples: Vec<_> = self.examples.into_iter().map(|example| {
             let state = state.clone();
             spawn(move || example(state))
@@ -126,7 +124,6 @@ impl World {
             ExampleGroupAndBlock {
                 group: ExampleGroup {
                     description: description.to_string(),
-                    state: self.state.clone(),
                     examples: Vec::new(),
                 },
                 block: Box::new(example_group_definition_block)
@@ -135,11 +132,11 @@ impl World {
     }
 
     fn run(self) -> WorldState {
-        let join_handles: Vec<_> = World::create_example_group_join_handles(self.example_groups);
+        let join_handles: Vec<_> = World::create_example_group_join_handles(self.state.clone(), self.example_groups);
         let results = join_handles.into_iter().map(|jh| jh.join().unwrap());
         let failed = results.into_iter().any(|r| { r.is_err() });
 
-        let mut state_guard = self.state.clone();
+        let state_guard = self.state.clone();
         let mut state = state_guard.lock().unwrap();
         state.failed = failed;
 
@@ -151,10 +148,11 @@ impl World {
         }
     }
 
-    fn create_example_group_join_handles(example_groups: Vec<ExampleGroupAndBlock>) -> Vec<JoinHandle<Result<(), ()>>> {
-        example_groups.into_iter().map({ |ExampleGroupAndBlock { group: example_group, block: block }|
+    fn create_example_group_join_handles(state: Arc<Mutex<WorldState>>, example_groups: Vec<ExampleGroupAndBlock>) -> Vec<JoinHandle<Result<(), ()>>> {
+        example_groups.into_iter().map(|ExampleGroupAndBlock { group: example_group, block}| {
+            let state = state.clone();
             spawn(|| -> Result<(), ()> {
-                if example_group.run(block) {
+                if example_group.run(state, block) {
                     Ok(())
                 } else {
                     Err(())
@@ -183,14 +181,6 @@ pub fn describe<F>(description: &str, example_group_definition_block: F) where F
     with_world(|world| {
         world.describe(description, example_group_definition_block);
     });
-}
-
-fn get_examples_from_world() -> Vec<ExampleGroupAndBlock> {
-    let mut result = Vec::new();
-
-    with_world(|world| {
-        ::std::mem::replace(&mut world.example_groups, result)
-    })
 }
 
 pub fn descriptor_main() {
