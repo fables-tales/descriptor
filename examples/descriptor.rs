@@ -1,18 +1,22 @@
 extern crate descriptor;
+extern crate expector;
+
 use std::time::Duration;
 use std::thread::sleep;
 
 use descriptor::*;
+use expector::*;
+
 fn main() {
     describe("descriptor", |eg| {
         eg.it("1", || {
-            panic!("Oh no");
+            expect(1).to(eq(2));
         });
         eg.it("2", || {
-            panic!("Oh no");
+            expect("abc").to(eq("def"));
         });
         eg.it("3", || {
-            panic!("Oh no");
+            expect(None).to(eq(Some(3)));
         });
 
         eg.it("works", || {
@@ -24,7 +28,7 @@ fn main() {
         });
 
         eg.it("does a lot of hard work", || {
-            sleep(Duration::new(0, 500_000));
+            sleep(Duration::new(3, 0));
         });
     });
 
