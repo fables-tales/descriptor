@@ -33,19 +33,22 @@ impl ExampleGroup {
         self.examples.push(Box::new(move |state: Arc<Mutex<world_state::WorldState>>| {
 
             let orig_panic_handler = panic::take_handler();
+
             panic::set_handler(|_| ());
-
             let result = recover(example_definition_block);
-
             panic::set_handler(move |info| { (*orig_panic_handler)(info) });
 
             //lololololololol scoping
             {
                 let ref reporter = state.lock().unwrap().reporter;
-                if result.is_err() {
-                    reporter.example_failed();
+                let reporting_result = if result.is_err() {
+                    reporter.example_failed()
                 } else {
-                    reporter.example_passed();
+                    reporter.example_passed()
+                };
+
+                if reporting_result.is_err() {
+                    panic!("work out what to do here");
                 }
             }
 

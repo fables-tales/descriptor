@@ -42,5 +42,5 @@ pub fn describe<F>(description: &str, example_group_definition_block: F) where F
 pub fn descriptor_main() {
     let state = consuming_world(|world| world.run());
     println!("");
-    println!("{}", state.failed);
+    println!("Suite failed? {}", state.failed);
 }
