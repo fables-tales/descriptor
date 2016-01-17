@@ -6,7 +6,7 @@ use std::thread::{JoinHandle, spawn, catch_panic};
 
 use world_state;
 use util::{await_handles, any_is_err};
-pub use reporter;
+use reporter;
 
 pub type ExampleResult = Result<(), Box<Any + Send>>;
 pub type Examples = Vec<Box<FnBox(Arc<Mutex<world_state::WorldState>>) -> ExampleResult + Send + 'static>>;
