@@ -1,4 +1,6 @@
 extern crate descriptor;
+use std::time::Duration;
+use std::thread::sleep;
 
 use descriptor::*;
 fn main() {
@@ -19,22 +21,10 @@ fn main() {
 
     describe("descriptor2", |eg| {
         eg.it("17", || {
-            println!("this one ran too");
         });
 
         eg.it("does a lot of hard work", || {
-            let mut i = 0;
-            let mut j = 0;
-            let mut k = 0;
-            while i < 1000 {
-                while j < 10000 {
-                    j += 1;
-                    k = 0;
-                }
-                i += 1;
-                j = 0;
-                k = 0;
-            }
+            sleep(Duration::new(0, 500_000));
         });
     });
 

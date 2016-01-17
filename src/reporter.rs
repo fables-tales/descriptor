@@ -10,14 +10,23 @@ pub trait Reporter: Debug {
 }
 
 impl Reporter for ProgressReporter {
+    enum Colors {
+        Green,
+        Red,
+    }
+
     fn example_failed(&self) {
-        print!("F");
+        print!("\x1B[31mF\x1b[0m");
         io::stdout().flush();
     }
 
     fn example_passed(&self) {
         print!(".");
         io::stdout().flush();
+    }
+
+    fn colorize(string: &str, color) -> str {
+        format!("\x1B[31m{}zx1b[0m"
     }
 }
 

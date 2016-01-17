@@ -2,11 +2,11 @@ use std::boxed::FnBox;
 use std::any::{Any};
 use std::sync::{Arc, Mutex};
 use std::fmt;
-use std::thread::{JoinHandle, spawn, catch_panic};
+use std::thread::{JoinHandle, spawn};
+use std::panic::{self, recover, RecoverSafe};
 
 use world_state;
 use util::{await_handles, any_is_err};
-use reporter;
 
 pub type ExampleResult = Result<(), Box<Any + Send>>;
 pub type Examples = Vec<Box<FnBox(Arc<Mutex<world_state::WorldState>>) -> ExampleResult + Send + 'static>>;
@@ -29,9 +29,15 @@ impl ExampleGroup {
             examples: Vec::new(),
         }
     }
-    pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Send + 'static {
+    pub fn it<F>(&mut self, _description: &str, example_definition_block: F) where F: Fn() + Send + RecoverSafe + 'static {
         self.examples.push(Box::new(move |state: Arc<Mutex<world_state::WorldState>>| {
-            let result = catch_panic(example_definition_block);
+
+            let orig_panic_handler = panic::take_handler();
+            panic::set_handler(|_| ());
+
+            let result = recover(example_definition_block);
+
+            panic::set_handler(move |info| { (*orig_panic_handler)(info) });
 
             //lololololololol scoping
             {

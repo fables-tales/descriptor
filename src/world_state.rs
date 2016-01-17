@@ -1,5 +1,4 @@
 use reporter;
-use std::sync::Mutex;
 
 #[derive(Debug)]
 pub struct WorldState {
