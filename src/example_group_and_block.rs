@@ -2,7 +2,7 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 use std::thread::{JoinHandle, spawn};
 
-use example_group::ExampleGroup;
+use example_group::example_group::ExampleGroup;
 use world_state::WorldState;
 
 pub struct ExampleGroupAndBlock {
@@ -24,7 +24,7 @@ impl ExampleGroupAndBlock {
         let block = self.block;
 
         spawn(|| -> Result<(), ()> {
-            if group.run(state, block) {
+            if !group.run(state, block).failed {
                 Ok(())
             } else {
                 Err(())

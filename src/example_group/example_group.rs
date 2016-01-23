@@ -6,6 +6,7 @@ use std::panic::{recover, RecoverSafe};
 use world_state;
 use util::{await_handles, any_is_err};
 use example::{Example, ExampleResult};
+use example_group::example_group_result::{ExampleGroupResult};
 
 pub struct ExampleGroup {
     description: String,
@@ -33,14 +34,14 @@ impl ExampleGroup {
         self.examples.push(example);
     }
 
-    pub fn run(mut self, state: Arc<Mutex<world_state::WorldState>>, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
+    pub fn run(mut self, state: Arc<Mutex<world_state::WorldState>>, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> ExampleGroupResult {
         block(&mut self);
 
         let running_examples = Self::build_running_examples(state, self.examples);
         let results = await_handles(running_examples);
         let failed = any_is_err(results);
 
-        return failed;
+        return ExampleGroupResult::new(failed);
     }
 
     fn build_running_examples(state: Arc<Mutex<world_state::WorldState>>, examples: Vec<Example>) -> Vec<JoinHandle<ExampleResult>> {

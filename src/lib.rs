@@ -12,6 +12,7 @@ pub mod example_group;
 
 use std::sync::{Arc, Mutex};
 use world::World;
+use example_group::example_group::ExampleGroup;
 
 lazy_static! {
     static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World::new()));
@@ -35,7 +36,7 @@ fn consuming_world<F, T>(blk: F) -> T where F: FnOnce(World) -> T {
     blk(world)
 }
 
-pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut example_group::ExampleGroup) + Send + 'static {
+pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Send + 'static {
     with_world(|world| {
         world.describe(description, example_group_definition_block);
     });

@@ -5,7 +5,7 @@ use std::panic;
 use util::{await_handles, any_is_err};
 use example_group_and_block::ExampleGroupAndBlock;
 use reporter::ProgressReporter;
-use example_group::ExampleGroup;
+use example_group::example_group::ExampleGroup;
 use world_state::WorldState;
 use world_result::WorldResult;
 
