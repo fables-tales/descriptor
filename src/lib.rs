@@ -7,6 +7,7 @@ mod world_state;
 pub mod example_group;
 mod example_group_and_block;
 mod world;
+mod example;
 
 use std::sync::{Arc, Mutex};
 use world::World;

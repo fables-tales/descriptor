@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
+use std::panic;
 
 use util::{await_handles, any_is_err};
 use example_group_and_block::ExampleGroupAndBlock;
@@ -31,7 +32,12 @@ impl World {
     }
 
     pub fn run(self) -> WorldState {
+        let orig_panic_handler = panic::take_handler();
+        panic::set_handler(|_| ());
+
         let failed = self.example_run_result();
+
+        panic::set_handler(move |arg| (*orig_panic_handler)(arg));
 
         World::build_result(failed)
     }

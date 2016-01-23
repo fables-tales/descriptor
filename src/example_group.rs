@@ -1,19 +1,15 @@
-use std::boxed::FnBox;
-use std::any::{Any};
 use std::sync::{Arc, Mutex};
 use std::fmt;
-use std::thread::{JoinHandle, spawn};
-use std::panic::{self, recover, RecoverSafe};
+use std::thread::JoinHandle;
+use std::panic::{recover, RecoverSafe};
 
 use world_state;
 use util::{await_handles, any_is_err};
-
-pub type ExampleResult = Result<(), Box<Any + Send>>;
-pub type Examples = Vec<Box<FnBox(Arc<Mutex<world_state::WorldState>>) -> ExampleResult + Send + 'static>>;
+use example::{Example, ExampleResult};
 
 pub struct ExampleGroup {
     description: String,
-    examples: Examples,
+    examples: Vec<Example>,
 }
 
 impl fmt::Debug for ExampleGroup {
@@ -29,31 +25,12 @@ impl ExampleGroup {
             examples: Vec::new(),
         }
     }
-    pub fn it<F>(&mut self, _description: &str, example_definition_block: F) where F: Fn() + Send + RecoverSafe + 'static {
-        self.examples.push(Box::new(move |state: Arc<Mutex<world_state::WorldState>>| {
 
-            let orig_panic_handler = panic::take_handler();
+    pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Send + RecoverSafe + 'static {
+        let recovery_proc = Box::new(|| recover(example_definition_block));
+        let example = Example::new(description.into(), recovery_proc);
 
-            panic::set_handler(|_| ());
-            let result = recover(example_definition_block);
-            panic::set_handler(move |info| { (*orig_panic_handler)(info) });
-
-            //lololololololol scoping
-            {
-                let ref reporter = state.lock().unwrap().reporter;
-                let reporting_result = if result.is_err() {
-                    reporter.example_failed()
-                } else {
-                    reporter.example_passed()
-                };
-
-                if reporting_result.is_err() {
-                    panic!("work out what to do here");
-                }
-            }
-
-            return result;
-        }));
+        self.examples.push(example);
     }
 
     pub fn run(mut self, state: Arc<Mutex<world_state::WorldState>>, block: Box<Fn(&mut ExampleGroup) + Send + 'static>) -> bool {
@@ -66,10 +43,11 @@ impl ExampleGroup {
         return failed;
     }
 
-    fn build_running_examples(state: Arc<Mutex<world_state::WorldState>>, examples: Examples) -> Vec<JoinHandle<ExampleResult>> {
+    fn build_running_examples(state: Arc<Mutex<world_state::WorldState>>, examples: Vec<Example>) -> Vec<JoinHandle<ExampleResult>> {
         examples.into_iter().map(|example| {
             let state = state.clone();
-            spawn(move || example(state))
+
+            example.spawn(state)
         }).collect()
     }
 }
