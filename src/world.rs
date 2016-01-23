@@ -4,9 +4,10 @@ use std::panic;
 
 use util::{await_handles, any_is_err};
 use example_group_and_block::ExampleGroupAndBlock;
-use reporter::{ProgressReporter, SuiteCompleteReporter};
+use reporter::ProgressReporter;
 use example_group::ExampleGroup;
 use world_state::WorldState;
+use world_result::WorldResult;
 
 #[derive(Debug)]
 pub struct World {
@@ -31,7 +32,7 @@ impl World {
         );
     }
 
-    pub fn run(self) -> WorldState {
+    pub fn run(self) -> WorldResult {
         let orig_panic_handler = panic::take_handler();
         panic::set_handler(|_| ());
 
@@ -39,13 +40,7 @@ impl World {
 
         panic::set_handler(move |arg| (*orig_panic_handler)(arg));
 
-        World::build_result(failed)
-    }
-
-    fn build_result(failed: bool) -> WorldState {
-        let mut state = WorldState::new(Box::new(SuiteCompleteReporter));
-        state.failed = failed;
-        state
+        WorldResult::new(failed)
     }
 
     fn example_run_result(self) -> bool {

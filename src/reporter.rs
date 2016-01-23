@@ -39,17 +39,3 @@ impl Reporter for ProgressReporter {
 
 
 }
-
-
-#[derive(Debug)]
-pub struct SuiteCompleteReporter;
-
-impl Reporter for SuiteCompleteReporter{
-    fn example_failed(&self) -> Result<(), Box<::std::error::Error>> {
-        panic!("The suite is complete, you cannot call further methods on the reporter");
-    }
-
-    fn example_passed(&self) -> Result<(), Box<::std::error::Error>> {
-        panic!("The suite is complete, you cannot call further methods on the reporter");
-    }
-}

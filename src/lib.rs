@@ -3,11 +3,12 @@
 extern crate lazy_static;
 mod util;
 mod reporter;
-mod world_state;
-pub mod example_group;
-mod example_group_and_block;
 mod world;
+mod world_result;
+mod world_state;
 mod example;
+mod example_group_and_block;
+pub mod example_group;
 
 use std::sync::{Arc, Mutex};
 use world::World;
