@@ -5,7 +5,7 @@ use std::any::{Any};
 
 use world_state;
 
-pub type ExampleResult = Result<(), Box<Any + Send>>;
+pub type ExampleResult = Result<(), Box<Any + Send + 'static>>;
 pub type ExampleRecoveryBlock = Box<FnBox() -> Result<(),  Box<Any + Send + 'static>> + Send + 'static>;
 
 pub struct Example {
@@ -30,10 +30,10 @@ impl Example {
 
         Example::report_result(&result, state);
 
-        return result;
+        result
     }
 
-    fn report_result(result: &Result<(), Box<Any + Send + 'static>>, state: Arc<Mutex<world_state::WorldState>>) {
+    fn report_result(result: &ExampleResult, state: Arc<Mutex<world_state::WorldState>>) {
         let ref reporter = state.lock().unwrap().reporter;
 
         let reporting_result = if result.is_err() {
