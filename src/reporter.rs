@@ -1,12 +1,15 @@
 use std::io::{self,Write};
 use std::fmt::Debug;
 
+use world_result::WorldResult;
+
 #[derive(Debug)]
 pub struct ProgressReporter;
 
 pub trait Reporter: Debug {
     fn example_failed(&self) -> Result<(), Box<::std::error::Error>>;
     fn example_passed(&self) -> Result<(), Box<::std::error::Error>>;
+    fn report_result(&self, &WorldResult) -> Result<(), Box<::std::error::Error>>;
 }
 
 enum Colors {
@@ -37,5 +40,9 @@ impl Reporter for ProgressReporter {
         io::stdout().flush().map_err(|e| e.into())
     }
 
-
+    fn report_result(&self, result: &WorldResult) -> Result<(), Box<::std::error::Error>> {
+        println!("");
+        println!("Suite failed? {}", result.failed);
+        io::stdout().flush().map_err(|e| e.into())
+    }
 }
