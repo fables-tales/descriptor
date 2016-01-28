@@ -42,7 +42,13 @@ impl Reporter for ProgressReporter {
 
     fn report_result(&self, result: &WorldResult) -> Result<(), Box<::std::error::Error>> {
         println!("");
-        println!("Suite failed? {}", result.failed);
+        println!("Suite failed? {}", result.failed());
+        println!("Example group failures:");
+
+        for r in result.results().iter().filter(|r| r.failed()) {
+            println!("{}", r.description);
+        };
+
         io::stdout().flush().map_err(|e| e.into())
     }
 }

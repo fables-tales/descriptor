@@ -47,8 +47,7 @@ impl World {
     pub fn run(self) -> WorldResult {
         let state = self.state.clone();
 
-        let failed = self.example_run_result();
-        let result = WorldResult::new(failed);
+        let result = self.example_run_result();
 
         World::report_result(&result, &state.lock().unwrap().reporter);
 
@@ -57,20 +56,19 @@ impl World {
 
     fn report_result(result: &WorldResult, reporter: &Box<Reporter + Send + 'static>) {
         let report_result = reporter.report_result(&result);
+
         if report_result.is_err() {
             panic!("work out what to do here");
         }
     }
 
-    fn example_run_result(self) -> bool {
+    fn example_run_result(self) -> WorldResult {
         let results = silencing_panics(move || {
             let join_handles: Vec<_> = World::create_example_group_join_handles(self.state.clone(), self.example_groups);
             await_handles(join_handles)
         });
 
-        let failed = results.into_iter().any(|r| r.failed());
-
-        failed
+        WorldResult::new(results)
     }
 
 

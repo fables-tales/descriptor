@@ -1,11 +1,21 @@
+use example_group::example_group_result::ExampleGroupResult;
+
 pub struct WorldResult {
-    pub failed: bool
+    results: Vec<ExampleGroupResult>,
 }
 
 impl WorldResult {
-    pub fn new(failed: bool) -> WorldResult {
+    pub fn new(results: Vec<ExampleGroupResult>) -> WorldResult {
         WorldResult {
-            failed: failed,
+            results: results,
         }
+    }
+
+    pub fn failed(&self) -> bool {
+        self.results.iter().any(|r| r.failed())
+    }
+
+    pub fn results(&self) -> &Vec<ExampleGroupResult> {
+        &self.results
     }
 }

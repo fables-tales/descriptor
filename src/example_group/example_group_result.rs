@@ -1,19 +1,20 @@
 use example::ExampleResult;
-use util::any_is_err;
+use util::borrow_any_is_err;
 
 pub struct ExampleGroupResult {
-    pub failed: bool,
+    results: Vec<ExampleResult>,
+    pub description: String,
 }
 
 impl ExampleGroupResult {
-    pub fn new(results: Vec<ExampleResult>) -> ExampleGroupResult {
-        let failed = any_is_err(results);
+    pub fn new(description: String, results: Vec<ExampleResult>) -> ExampleGroupResult {
         ExampleGroupResult {
-            failed: failed
+            results: results,
+            description: description,
         }
     }
 
     pub fn failed(&self) -> bool {
-        self.failed
+        borrow_any_is_err(&self.results)
     }
 }

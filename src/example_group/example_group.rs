@@ -40,7 +40,7 @@ impl ExampleGroup {
         let running_examples = Self::build_running_examples(state, self.examples);
         let results = await_handles(running_examples);
 
-        return ExampleGroupResult::new(results);
+        return ExampleGroupResult::new(self.description, results);
     }
 
     fn build_running_examples(state: Arc<Mutex<world_state::WorldState>>, examples: Vec<Example>) -> Vec<JoinHandle<ExampleResult>> {
