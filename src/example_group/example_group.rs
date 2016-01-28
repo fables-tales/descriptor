@@ -4,7 +4,7 @@ use std::thread::JoinHandle;
 use std::panic::{recover, RecoverSafe};
 
 use world_state;
-use util::{await_handles, any_is_err};
+use util::await_handles;
 use example::{Example, ExampleResult};
 use example_group::example_group_result::{ExampleGroupResult};
 
@@ -39,9 +39,8 @@ impl ExampleGroup {
 
         let running_examples = Self::build_running_examples(state, self.examples);
         let results = await_handles(running_examples);
-        let failed = any_is_err(results);
 
-        return ExampleGroupResult::new(failed);
+        return ExampleGroupResult::new(results);
     }
 
     fn build_running_examples(state: Arc<Mutex<world_state::WorldState>>, examples: Vec<Example>) -> Vec<JoinHandle<ExampleResult>> {

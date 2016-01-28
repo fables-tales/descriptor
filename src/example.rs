@@ -1,22 +1,34 @@
 use std::boxed::FnBox;
 use std::sync::{Arc, Mutex};
-use std::thread::{JoinHandle, spawn};
-use std::any::{Any};
+use std::thread::{self, JoinHandle, spawn};
 
 use world_state;
 
-pub type ExampleResult = Result<(), Box<Any + Send + 'static>>;
-pub type ExampleRecoveryBlock = Box<FnBox() -> Result<(),  Box<Any + Send + 'static>> + Send + 'static>;
+pub struct ExampleResultInner {
+    _description: String,
+}
+
+impl ExampleResultInner {
+    pub fn new(description: String) -> ExampleResultInner {
+        ExampleResultInner {
+            _description: description,
+        }
+    }
+}
+
+
+pub type ExampleResult = Result<ExampleResultInner, ExampleResultInner>;
+pub type ExampleRecoveryBlock = Box<FnBox() -> thread::Result<()> + Send + 'static>;
 
 pub struct Example {
-    _description: String,
+    description: String,
     block: ExampleRecoveryBlock,
 }
 
 impl Example {
     pub fn new(description: String, block: ExampleRecoveryBlock) -> Example {
         Example {
-            _description: description,
+            description: description,
             block: block,
         }
     }
@@ -26,7 +38,12 @@ impl Example {
     }
 
     fn run(self, state: Arc<Mutex<world_state::WorldState>>) -> ExampleResult {
-        let result = (self.block)();
+        let block_result = (self.block)();
+
+        let result = match block_result {
+            Err(_) => Err(ExampleResultInner::new(self.description)),
+            Ok(_) => Ok(ExampleResultInner::new(self.description)),
+        };
 
         Example::report_result(&result, state);
 

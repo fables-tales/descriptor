@@ -4,6 +4,7 @@ use std::thread::{JoinHandle, spawn};
 
 use example_group::example_group::ExampleGroup;
 use world_state::WorldState;
+use example_group::example_group_result::ExampleGroupResult;
 
 pub struct ExampleGroupAndBlock {
     pub group: ExampleGroup,
@@ -18,18 +19,12 @@ impl ExampleGroupAndBlock {
         }
     }
 
-    pub fn spawn(self, state: &Arc<Mutex<WorldState>>) -> JoinHandle<Result<(), ()>> {
+    pub fn spawn(self, state: &Arc<Mutex<WorldState>>) -> JoinHandle<ExampleGroupResult> {
         let state = state.clone();
         let group = self.group;
         let block = self.block;
 
-        spawn(|| -> Result<(), ()> {
-            if !group.run(state, block).failed {
-                Ok(())
-            } else {
-                Err(())
-            }
-        })
+        spawn(|| group.run(state, block))
     }
 }
 

@@ -2,12 +2,13 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::panic;
 
-use util::{await_handles, any_is_err};
+use util::{await_handles};
 use example_group_and_block::ExampleGroupAndBlock;
 use reporter::{ProgressReporter, Reporter};
 use example_group::example_group::ExampleGroup;
 use world_state::WorldState;
 use world_result::WorldResult;
+use example_group::example_group_result::ExampleGroupResult;
 
 #[derive(Debug)]
 pub struct World {
@@ -67,13 +68,13 @@ impl World {
             await_handles(join_handles)
         });
 
-        let failed = any_is_err(results);
+        let failed = results.into_iter().any(|r| r.failed());
 
         failed
     }
 
 
-    fn create_example_group_join_handles(state: Arc<Mutex<WorldState>>, example_groups: Vec<ExampleGroupAndBlock>) -> Vec<JoinHandle<Result<(), ()>>> {
+    fn create_example_group_join_handles(state: Arc<Mutex<WorldState>>, example_groups: Vec<ExampleGroupAndBlock>) -> Vec<JoinHandle<ExampleGroupResult>> {
         example_groups.into_iter().map(|egab| egab.spawn(&state)).collect()
     }
 }
