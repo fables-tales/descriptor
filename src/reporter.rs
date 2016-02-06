@@ -46,7 +46,7 @@ impl Reporter for ProgressReporter {
         println!("Example group failures:");
 
         for example_group in result.results().iter().filter(|r| r.failed()) {
-            println!("{}", example_group.description);
+            println!("{}", example_group.metadata);
             for example in example_group.failed_examples().iter() {
                 println!("    - {}", example.description);
             }

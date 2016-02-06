@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate descriptor;
 extern crate expector;
 
@@ -8,7 +9,7 @@ use descriptor::*;
 use expector::*;
 
 fn main() {
-    describe("example group 1", |eg| {
+    describe("example group 1", source_location!(), |eg| {
         eg.it("1", || {
             expect(1).to(eq(2));
         });
@@ -23,7 +24,7 @@ fn main() {
         });
     });
 
-    describe("example group 2", |eg| {
+    describe("example group 2", source_location!(), |eg| {
         eg.it("17", || {
         });
 

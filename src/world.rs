@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::panic;
 
-use util::{await_handles};
+use util::{await_handles, SourceLocation};
 use example_group_and_block::ExampleGroupAndBlock;
 use reporter::{ProgressReporter, Reporter};
 use example_group::example_group::ExampleGroup;
@@ -35,10 +35,10 @@ impl World {
         }
     }
 
-    pub fn describe<F>(&mut self, description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Send + 'static {
+    pub fn describe<F>(&mut self, description: &str, source_location: SourceLocation, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Send + 'static {
         self.example_groups.push(
             ExampleGroupAndBlock::new(
-                ExampleGroup::new(description),
+                ExampleGroup::new(description, source_location),
                 Box::new(example_group_definition_block),
             )
         );

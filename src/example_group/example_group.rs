@@ -4,26 +4,42 @@ use std::thread::JoinHandle;
 use std::panic::{recover, RecoverSafe};
 
 use world_state;
-use util::await_handles;
+use util::{await_handles, SourceLocation};
 use example::{Example, ExampleResult};
 use example_group::example_group_result::{ExampleGroupResult};
+use std::fmt::{Display, Formatter, Error};
+
+#[derive(Debug)]
+pub struct ExampleGroupMetadata {
+    pub description: String,
+    pub source_location: SourceLocation,
+}
+
+impl Display for ExampleGroupMetadata {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        write!(f, "`{}` at {}", self.description, self.source_location)
+    }
+}
 
 pub struct ExampleGroup {
-    description: String,
     examples: Vec<Example>,
+    pub metadata: ExampleGroupMetadata
 }
 
 impl fmt::Debug for ExampleGroup {
     fn fmt(&self, formatter: &mut fmt::Formatter) ->  fmt::Result {
-        write!(formatter, "<Example group with description {}>", self.description)
+        write!(formatter, "<Example group with metadata {:?}>", self.metadata)
     }
 }
 
 impl ExampleGroup {
-    pub fn new(description: &str) -> ExampleGroup {
+    pub fn new(description: &str, source_location: SourceLocation) -> ExampleGroup {
         ExampleGroup {
-            description: description.to_string(),
             examples: Vec::new(),
+            metadata: ExampleGroupMetadata {
+                description: description.to_string(),
+                source_location: source_location,
+            }
         }
     }
 
@@ -40,7 +56,7 @@ impl ExampleGroup {
         let running_examples = Self::build_running_examples(state, self.examples);
         let results = await_handles(running_examples);
 
-        return ExampleGroupResult::new(self.description, results);
+        return ExampleGroupResult::new(self.metadata, results);
     }
 
     fn build_running_examples(state: Arc<Mutex<world_state::WorldState>>, examples: Vec<Example>) -> Vec<JoinHandle<ExampleResult>> {

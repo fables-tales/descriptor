@@ -1,6 +1,9 @@
 #![feature(recover, std_panic, panic_handler, fnbox)]
 #[macro_use]
 extern crate lazy_static;
+
+pub mod example_group;
+
 mod util;
 mod reporter;
 mod world;
@@ -8,11 +11,13 @@ mod world_result;
 mod world_state;
 mod example;
 mod example_group_and_block;
-pub mod example_group;
+
+pub use util::SourceLocation;
 
 use std::sync::{Arc, Mutex};
 use world::World;
 use example_group::example_group::ExampleGroup;
+
 
 lazy_static! {
     static ref WORLD: Arc<Mutex<World>> = Arc::new(Mutex::new(World::new()));
@@ -36,9 +41,9 @@ fn consuming_world<F, T>(blk: F) -> T where F: FnOnce(World) -> T {
     blk(world)
 }
 
-pub fn describe<F>(description: &str, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Send + 'static {
+pub fn describe<F>(description: &str, source_location: SourceLocation, example_group_definition_block: F) where F: Fn(&mut ExampleGroup) + Send + 'static {
     with_world(|world| {
-        world.describe(description, example_group_definition_block);
+        world.describe(description, source_location, example_group_definition_block);
     });
 }
 
