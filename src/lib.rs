@@ -4,6 +4,7 @@ extern crate lazy_static;
 
 pub mod example_group;
 
+mod macros;
 mod util;
 mod reporter;
 mod world;
