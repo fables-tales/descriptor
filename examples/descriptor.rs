@@ -8,7 +8,7 @@ use descriptor::*;
 use expector::*;
 
 fn main() {
-    describe("descriptor", |eg| {
+    describe("example group 1", |eg| {
         eg.it("1", || {
             expect(1).to(eq(2));
         });
@@ -23,7 +23,7 @@ fn main() {
         });
     });
 
-    describe("descriptor2", |eg| {
+    describe("example group 2", |eg| {
         eg.it("17", || {
         });
 
