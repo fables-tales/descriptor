@@ -43,9 +43,9 @@ impl ExampleGroup {
         }
     }
 
-    pub fn it<F>(&mut self, description: &str, example_definition_block: F) where F: Fn() + Send + RecoverSafe + 'static {
+    pub fn it<F>(&mut self, description: &str, source_location: SourceLocation, example_definition_block: F) where F: Fn() + Send + RecoverSafe + 'static {
         let recovery_proc = Box::new(|| recover(example_definition_block));
-        let example = Example::new(description.into(), recovery_proc);
+        let example = Example::new(description.into(), source_location, recovery_proc);
 
         self.examples.push(example);
     }

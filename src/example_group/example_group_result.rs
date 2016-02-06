@@ -1,4 +1,4 @@
-use example::{ExampleResult, ExampleResultInner};
+use example::{ExampleResult, ExampleMetadata};
 use example_group::example_group::ExampleGroupMetadata;
 use util::borrow_any_is_err;
 
@@ -19,7 +19,7 @@ impl ExampleGroupResult {
         borrow_any_is_err(&self.results)
     }
 
-    pub fn failed_examples(&self) -> Vec<&ExampleResultInner> {
+    pub fn failed_examples(&self) -> Vec<&ExampleMetadata> {
         self.results
             .iter()
             .filter_map(|r| r.as_ref().err())

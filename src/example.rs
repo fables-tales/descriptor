@@ -1,35 +1,38 @@
 use std::boxed::FnBox;
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle, spawn};
+use util::SourceLocation;
+use std::fmt::{Display, Formatter, Error};
 
 use world_state;
 
-pub struct ExampleResultInner {
+pub type ExampleResult = Result<ExampleMetadata, ExampleMetadata>;
+pub type ExampleRecoveryBlock = Box<FnBox() -> thread::Result<()> + Send + 'static>;
+
+pub struct ExampleMetadata {
     pub description: String,
+    pub source_location: SourceLocation,
 }
 
-impl ExampleResultInner {
-    pub fn new(description: String) -> ExampleResultInner {
-        ExampleResultInner {
-            description: description,
-        }
+impl Display for ExampleMetadata {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        write!(f, "`{}` at {}", self.description, self.source_location)
     }
 }
 
-
-pub type ExampleResult = Result<ExampleResultInner, ExampleResultInner>;
-pub type ExampleRecoveryBlock = Box<FnBox() -> thread::Result<()> + Send + 'static>;
-
 pub struct Example {
-    description: String,
     block: ExampleRecoveryBlock,
+    metadata: ExampleMetadata,
 }
 
 impl Example {
-    pub fn new(description: String, block: ExampleRecoveryBlock) -> Example {
+    pub fn new(description: String, source_location: SourceLocation, block: ExampleRecoveryBlock) -> Example {
         Example {
-            description: description,
             block: block,
+            metadata: ExampleMetadata {
+                description: description,
+                source_location: source_location,
+            }
         }
     }
 
@@ -41,8 +44,8 @@ impl Example {
         let block_result = (self.block)();
 
         let result = match block_result {
-            Err(_) => Err(ExampleResultInner::new(self.description)),
-            Ok(_) => Ok(ExampleResultInner::new(self.description)),
+            Err(_) => Err(self.metadata),
+            Ok(_) => Ok(self.metadata),
         };
 
         Example::report_result(&result, state);
