@@ -1,4 +1,4 @@
-use example::ExampleResult;
+use example::{ExampleResult, ExampleResultInner};
 use util::borrow_any_is_err;
 
 pub struct ExampleGroupResult {
@@ -16,5 +16,12 @@ impl ExampleGroupResult {
 
     pub fn failed(&self) -> bool {
         borrow_any_is_err(&self.results)
+    }
+
+    pub fn failed_examples(&self) -> Vec<&ExampleResultInner> {
+        self.results
+            .iter()
+            .filter_map(|r| r.as_ref().err())
+            .collect()
     }
 }
