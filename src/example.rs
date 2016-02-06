@@ -5,13 +5,13 @@ use std::thread::{self, JoinHandle, spawn};
 use world_state;
 
 pub struct ExampleResultInner {
-    _description: String,
+    pub description: String,
 }
 
 impl ExampleResultInner {
     pub fn new(description: String) -> ExampleResultInner {
         ExampleResultInner {
-            _description: description,
+            description: description,
         }
     }
 }
