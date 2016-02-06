@@ -45,8 +45,11 @@ impl Reporter for ProgressReporter {
         println!("Suite failed? {}", result.failed());
         println!("Example group failures:");
 
-        for r in result.results().iter().filter(|r| r.failed()) {
-            println!("{}", r.description);
+        for example_group in result.results().iter().filter(|r| r.failed()) {
+            println!("{}", example_group.description);
+            for example in example_group.failed_examples().iter() {
+                println!("    - {}", example.description);
+            }
         };
 
         io::stdout().flush().map_err(|e| e.into())
