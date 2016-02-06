@@ -5,6 +5,6 @@ pub fn await_handles<T>(join_handles: Vec<JoinHandle<T>>) -> Vec<T> {
     }).collect()
 }
 
-pub fn borrow_any_is_err<A, B>(results: &Vec<Result<A, B>>) -> bool {
+pub fn borrow_any_is_err<A, B>(results: &[Result<A, B>]) -> bool {
     results.iter().any(|r| r.is_err())
 }

@@ -15,7 +15,7 @@ impl WorldResult {
         self.results.iter().any(|r| r.failed())
     }
 
-    pub fn results(&self) -> &Vec<ExampleGroupResult> {
+    pub fn results(&self) -> &[ExampleGroupResult] {
         &self.results
     }
 }
