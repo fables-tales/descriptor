@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::fmt;
 use std::thread::JoinHandle;
-use std::panic::{recover, RecoverSafe};
+use std::panic::{recover, RecoverSafe, UnwindSafe};
 
 use world_state;
 use util::{await_handles, SourceLocation};
@@ -43,7 +43,7 @@ impl ExampleGroup {
         }
     }
 
-    pub fn it<F>(&mut self, description: &str, source_location: SourceLocation, example_definition_block: F) where F: Fn() + Send + RecoverSafe + 'static {
+    pub fn it<F>(&mut self, description: &str, source_location: SourceLocation, example_definition_block: F) where F: Fn() + Send + RecoverSafe + UnwindSafe + 'static {
         let recovery_proc = Box::new(|| recover(example_definition_block));
         let example = Example::new(description.into(), source_location, recovery_proc);
 

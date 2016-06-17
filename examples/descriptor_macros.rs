@@ -6,7 +6,7 @@ use std::time::Duration;
 use std::thread::sleep;
 
 use descriptor::*;
-use expector::*;
+use expector::prelude::*;
 
 fn main() {
     describe!("example group 1", |eg| {
