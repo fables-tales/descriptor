@@ -5,3 +5,6 @@ authors = ["Sam Phippen <samphippen@googlemail.com>"]
 
 [dev-dependencies]
 expector = { path = "../expector" }
+
+[lib]
+crate-type = ["dylib"]
