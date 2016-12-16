@@ -7,4 +7,4 @@ authors = ["Sam Phippen <samphippen@googlemail.com>"]
 lazy_static = "0.1.15"
 
 [dev-dependencies]
-expector = { path = "../expector" }
+expector = { git = "https://github.com/samphippen/expector" }
